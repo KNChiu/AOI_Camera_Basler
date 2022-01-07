@@ -33,6 +33,16 @@ class CameraAPI():
             image = self.converter.Convert(self.grabResult)                                           # 取得串流影像
             return image.GetArray()
         
+    def bmp_save(self, save_path, save_name):
+        with self.camera.RetrieveResult(2000) as result:                            # 建立新的緩衝區
+            img = pylon.PylonImage()
+
+            img.AttachGrabResultBuffer(result)
+            filename = str(save_path) + "\\" + str(save_name) + ".bmp"
+            img.Save(pylon.ImageFileFormat_Bmp, filename)
+            img.Release()                                                           # 釋放資源
+
+
 
 if __name__ == '__main__':
     AOICameraAPI = CameraAPI()
@@ -53,5 +63,9 @@ if __name__ == '__main__':
             key = cv2.waitKey(1)
             if key & 0xFF == ord('q'):
                 break
+            elif key & 0xFF == ord('s'):
+                AOICameraAPI.bmp_save(save_path = r"saveimg", save_name = time.strftime('%H%M%S', time.localtime()))
+                print("bmp_save")
+                time.sleep(0.1)
 
     AOICameraAPI.grabResult.Release()
