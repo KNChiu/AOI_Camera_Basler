@@ -28,9 +28,10 @@ class CameraAPI():
         self.converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
     
     def get_img_nummpy(self):
-        self.grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)      # 設定串流
-        if self.grabResult.GrabSucceeded():
-            image = self.converter.Convert(self.grabResult)                                           # 取得串流影像
+        grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)      # 設定串流
+        if grabResult.GrabSucceeded():
+            image = self.converter.Convert(grabResult)                                           # 取得串流影像
+            grabResult.Release()
             return image.GetArray()
         
     def bmp_save(self, save_path, save_name):
@@ -41,13 +42,22 @@ class CameraAPI():
             filename = str(save_path) + "\\" + str(save_name) + ".bmp"
             img.Save(pylon.ImageFileFormat_Bmp, filename)
             img.Release()                                                           # 釋放資源
+    
+    def stop_grabbing(self):
+        self.camera.StopGrabbing()
 
+    def close_device(self):
+        self.camera.Close()
 
 
 if __name__ == '__main__':
     AOICameraAPI = CameraAPI()
+    
     AOICameraAPI.open_device()
+    print("open_device")
+
     AOICameraAPI.start_grabbing()
+    print("start_grabbing")
 
     cv2.namedWindow("showIMG",0)
     cv2.resizeWindow("showIMG", 500, 500) 
@@ -68,4 +78,10 @@ if __name__ == '__main__':
                 print("bmp_save")
                 time.sleep(0.1)
 
-    AOICameraAPI.grabResult.Release()
+    AOICameraAPI.stop_grabbing()
+    print("stop_grabbing")
+
+    AOICameraAPI.close_device()
+    print("close_device")
+
+    print("finish")
