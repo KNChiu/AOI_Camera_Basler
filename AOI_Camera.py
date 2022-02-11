@@ -5,6 +5,7 @@ import time
 
 class CameraAPI():
     def __init__(self):
+        self.image = None
         pass
     
     def open_device(self):
@@ -28,20 +29,22 @@ class CameraAPI():
         self.converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
     
     def get_img_nummpy(self):
-        grabResult = self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)      # 設定串流
-        if grabResult.GrabSucceeded():
-            image = self.converter.Convert(grabResult)                                           # 取得串流影像
-            grabResult.Release()
-            return image.GetArray()
+        with self.camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException) as grabResult:   # 建立新的緩衝區
+            if grabResult.GrabSucceeded():                                                           # 確保獲得影像
+                image = self.converter.Convert(grabResult)                                           # 取得串流影像
+                grabResult.Release()
+                self.image = image.GetArray()
+                return image.GetArray()
         
     def bmp_save(self, save_path, save_name):
-        with self.camera.RetrieveResult(2000) as result:                            # 建立新的緩衝區
-            img = pylon.PylonImage()
+        with self.camera.RetrieveResult(2000) as result:                                             # 建立新的緩衝區
+            if result.GrabSucceeded():                                                              # 確保獲得影像
+                img = pylon.PylonImage()
 
-            img.AttachGrabResultBuffer(result)
-            filename = str(save_path) + "\\" + str(save_name) + ".bmp"
-            img.Save(pylon.ImageFileFormat_Bmp, filename)
-            img.Release()                                                           # 釋放資源
+                img.AttachGrabResultBuffer(result)
+                filename = str(save_path) + "\\" + str(save_name) + ".bmp"
+                img.Save(pylon.ImageFileFormat_Bmp, filename)
+                img.Release()                                                           # 釋放資源
     
     def stop_grabbing(self):
         self.camera.StopGrabbing()
